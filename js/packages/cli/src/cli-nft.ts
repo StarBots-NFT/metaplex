@@ -6,7 +6,8 @@ import { web3 } from '@project-serum/anchor';
 import { PublicKey } from '@solana/web3.js';
 
 program.version('0.0.1');
-log.setLevel('info');
+log.setLevel('debug');
+// log.setLevel('info');
 
 programCommand('mint')
   .option('-u, --url <string>', 'metadata url')
