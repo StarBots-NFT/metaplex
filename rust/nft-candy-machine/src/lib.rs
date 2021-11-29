@@ -16,7 +16,8 @@ use {
     spl_token::state::{Account, Mint},
     std::cell::Ref,
 };
-anchor_lang::declare_id!("cndyAnrLdpjq1Ssp1z8xxDsB8dxe7u4HL5Nxi2K5WXZ");
+// anchor_lang::declare_id!("cndyAnrLdpjq1Ssp1z8xxDsB8dxe7u4HL5Nxi2K5WXZ");
+anchor_lang::declare_id!("7mNwERNyxxCeREiKrsStZHS2K5kBgQ9uVVxYPnsN2mUY");
 
 const PREFIX: &str = "candy_machine";
 #[program]
@@ -47,6 +48,9 @@ pub mod nft_candy_machine {
                 }
             }
         }
+
+        msg!("payer = {}", ctx.accounts.payer.key);
+
 
         if candy_machine.items_redeemed >= candy_machine.data.items_available {
             return Err(ErrorCode::CandyMachineEmpty.into());
@@ -414,7 +418,7 @@ pub mod nft_candy_machine {
 #[derive(Accounts)]
 #[instruction(bump: u8, data: CandyMachineData)]
 pub struct InitializeCandyMachine<'info> {
-    #[account(init, seeds=[PREFIX.as_bytes(), config.key().as_ref(), data.uuid.as_bytes()], payer=payer, bump=bump, space=8+32+32+33+32+64+64+64+200)]
+    #[account(init, seeds=[PREFIX.as_bytes(), config.key().as_ref(), data.uuid.as_bytes()], payer=payer, bump=bump, space=8+32+32+33+32+64+64+64+200+8+12000*32))]
     candy_machine: ProgramAccount<'info, CandyMachine>,
     #[account(constraint= wallet.owner == &spl_token::id() || (wallet.data_is_empty() && wallet.lamports() > 0) )]
     wallet: AccountInfo<'info>,
@@ -499,23 +503,25 @@ pub struct UpdateCandyMachine<'info> {
     authority: AccountInfo<'info>,
 }
 
+// 8+32+32+32 +33+64+64+64+200
 #[account]
 #[derive(Default)]
 pub struct CandyMachine {
-    pub authority: Pubkey,
-    pub wallet: Pubkey,
-    pub token_mint: Option<Pubkey>,
-    pub config: Pubkey,
+    pub authority: Pubkey, // 32
+    pub wallet: Pubkey, // 32
+    pub config: Pubkey, // 32
+    pub token_mint: Option<Pubkey>, // 33
     pub data: CandyMachineData,
-    pub items_redeemed: u64,
-    pub bump: u8,
+    pub items_redeemed: u64, // 8
+    pub bump: u8, 
+    pub buyers: Vec<Pubkey>,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Default)]
 pub struct CandyMachineData {
     pub uuid: String,
     pub price: u64,
-    pub items_available: u64,
+    pub items_available: u64, // 8 bytes
     pub go_live_date: Option<i64>,
 }
 
